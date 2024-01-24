@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Crystal Clear Environmental Invoice</title>
+  <style>
+    /* Your existing styles... */
+    .invoice-box {
+      max-width: 800px;
+      margin: auto;
+      padding: 30px;
+      border: 1px solid #eee;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+      font-size: 16px;
+      line-height: 24px;
+      font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+      color: #555;
+    }
+
+    .invoice-box table {
+      width: 100%;
+      line-height: inherit;
+      text-align: left;
+    }
+
+    .invoice-box table td {
+      padding: 5px;
+      vertical-align: top;
+    }
+
+    .invoice-box table tr td:nth-child(2) {
+      text-align: right;
+    }
+
+    .invoice-box table tr.top table td {
+      padding-bottom: 20px;
+    }
+
+    .invoice-box table tr.top table td.title {
+      font-size: 45px;
+      line-height: 45px;
+      color: #555;
+    }
+
+    .invoice-box table tr.information table td {
+      padding-bottom: 40px;
+    }
+
+    .invoice-box table tr.heading td {
+      border-bottom: 1px solid #2669AF;
+      font-weight: bold;
+      color: #555;
+    }
+
+    .invoice-box table tr.heading-wth-bg td {
+      background: #DEEAF6;
+      border-bottom: 1px solid #2669AF;
+      font-weight: bold;
+      color: #2669AF;
+    }
+
+    .invoice-box table tr.details td {
+      padding-bottom: 1px;
+    }
+
+    .invoice-box table tr.item td {
+      border-bottom: 1px solid #eee;
+    }
+
+    .invoice-box table tr.item.last td {
+      padding-bottom: 20px;
+      border-bottom: none;
+    }
+
+    .invoice-box table tr.total td:nth-child(2) {
+      border-top: 2px solid #eee;
+      font-weight: bold;
+    }
+
+    .chart-container {
+      width: 90%;
+      margin-top: 40px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* New styles for the chart */
+    .chart-container canvas {
+      width: 100%;
+      height: 300px; /* Adjust the height as needed */
+      display: block;
+      margin: auto;
+    }
+
+    body {
+    margin: 0;
+    }
+
+    .page {
+      page-break-before: always; /* Force page break before each element with class 'page' */
+      margin-top: 2cm; /* Set top margin for the second and subsequent pages */
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.7/handlebars.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.0.0-rc.1/chartjs-plugin-datalabels.min.js"></script>
+</head>
+<body>
+  <script id="invoice-template" type="text/x-handlebars-template">
+    <div class="invoice-box">
+      <table cellpadding="0" cellspacing="0">
+        <!-- ... (previous rows) ... -->
+
+        <!-- Logo Section -->
+        <tr class="top">
+          <td colspan="2">
+            <table>
+              <tr>
+                <td class="title">
+                  <img src={{companyLogo}} style="width: 100%; max-width: 250px" />
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Company and Customer Information -->
+        <tr class="information">
+          <td colspan="2">
+            <table>
+              <tr>
+                <td>
+                  {{companyInfo.name}}<br />
+                  {{companyInfo.address}}<br />
+                  Singapore {{companyInfo.postalCode}} <br />
+                  Phone {{companyInfo.phone}}<br />
+                  {{companyInfo.email}} | {{companyInfo.website}}<br />
+                  <br />
+                  TO<br />
+                  {{customerInfo.name}}<br />
+                  {{customerInfo.company}}<br />
+                  {{customerInfo.address}}<br />
+                  Singapore {{customerInfo.postalCode}}<br />
+                  {{customerInfo.phone}} | {{customerInfo.email}}
+                </td>
+
+                <td>
+                  <b>INVOICE #</b> {{invoiceDetails.invoiceNumber}}<br />
+                  <b>DATE</b> {{invoiceDetails.date}}<br />
+                  <br />
+                  <br />
+                  <br />
+                  <br />
+                  <b>FACILITY #</b> {{invoiceDetails.facilityNumber}}<br />
+                  <b>FOR</b> {{invoiceDetails.serviceType}}<br />
+                  <b>P.O. #</b> {{invoiceDetails.purchaseOrder}}<br />
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Summary Details -->
+        <tr class="details">
+          <td><b style="color: #9CC2E5">This Month's Savings</b></td>
+          <td></td>
+        </tr>
+
+        <tr class="details">
+          <td><h1 style="color: #2669AF">{{savingsDetails.amount}}</h1></td>
+          <td><h1 style="color: #2669AF">{{savingsDetails.month}}</h1></td>
+        </tr>
+
+        <!-- Monthly Savings Breakdown -->
+        <tr class="item">
+          <td><b>Total Monthly Savings</b></td>
+          <td><b>Amount</b></td>
+        </tr>
+
+        <!-- Battery Offset and Total Rebate -->
+        <tr class="item">
+          <td>Battery Offset</td>
+          <td>{{savingsDetails.batteryOffsetAmount}}</td>
+        </tr>
+
+        <tr class="item last">
+          <td>Total Rebate</td>
+          <td>{{savingsDetails.totalRebateAmount}}</td>
+        </tr>
+
+        <!-- Battery Charges Table -->
+        <tr>
+          <td colspan="4">
+            <table cellspacing="0" cellpadding="0">
+              <!-- ... (existing rows) ... -->
+              <tr class="heading-wth-bg">
+                <td>Battery Charges</td>
+                <td style="text-align: right;">kWh</td>
+                <td style="text-align: right;">Rate($)</td>
+                <td style="text-align: right;">Amount</td>
+              </tr>
+
+              <tr class="item">
+                <td>Charged Amount</td>
+                <td style="text-align: right;">{{batteryCharges.chargedAmount.kwh}}</td>
+                <td style="text-align: right;">{{batteryCharges.chargedAmount.rate}}</td>
+                <td style="text-align: right;">{{batteryCharges.chargedAmount.amount}}</td>
+              </tr>
+
+              <tr class="item">
+                <td>Discharged Amount</td>
+                <td style="text-align: right;">{{batteryCharges.dischargedAmount.kwh}}</td>
+                <td style="text-align: right;">{{batteryCharges.dischargedAmount.rate}}</td>
+                <td style="text-align: right;">{{batteryCharges.dischargedAmount.amount}}</td>
+              </tr>
+
+              <tr class="item last">
+                <td><b>Battery Offset</b></td>
+                <td></td>
+                <td></td>
+                <td style="text-align: right;"><b>{{batteryCharges.batteryOffset}}</b></td>
+              </tr>
+
+              <tr class="heading-wth-bg">
+                <td>Rebates</td>
+                <td></td>
+                <td></td>
+                <td style="text-align: right;">Amount</td>
+              </tr>
+
+              <tr class="item">
+                <td>Allocated Rebate</td>
+                <td></td>
+                <td></td>
+                <td style="text-align: right;">{{rebates.allocatedRebate}}</td>
+              </tr>
+
+              <tr class="item last">
+                <td><b>Total Rebate</b></td>
+                <td></td>
+                <td></td>
+                <td style="text-align: right;"><b>{{rebates.totalRebate}}</b></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Page Break-->
+      <div class="page"></div>
+
+      <!-- Chart Container -->
+      <div class="chart-container">
+        <canvas id="myChart"></canvas>
+      </div>
+
+      <p style="padding-top:20px; line-height:15px;">
+        <small>Make all cheques payable to Crystal Clear Environmental Pte Ltd.</small><br />
+        <small>Payment is due within 30 days. </small><br />
+        <small>If you have any questions concerning this invoice, contact {{contact.name}} | {{contact.phone}} | {{contact.email}}</small>
+      </p>
+
+      <p style="padding-top:40px; text-align:center; color:#2669AF">
+        THANK YOU FOR YOUR BUSINESS!
+      </p>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.0.0-rc.1/chartjs-plugin-datalabels.min.js"></script>
+      <script>
+        // Sample data for the invoice  
+        var invoiceData = {
+          companyLogo: "logo.jpg",
+          companyInfo: {
+            name: "Crystal Clear Environmental Pte. Ltd.",
+            address: "16 New Industrial Road, #05-04",
+            postalCode: "536204",
+            phone: "+65 6748 0910",
+            email: "enquiry@crystalclear.com.sg",
+            website: "http://crystalclear.com.sg"
+          },
+          customerInfo: {
+            name: "Teo Swee Heng",
+            company: "Chemical Industries Limited",
+            address: "91 Sakra Avenue Jurong Island",
+            postalCode: "627882",
+            phone: "6999 99999",
+            email: "bcyeo@cil.com.sg"
+          },
+          invoiceDetails: {
+            invoiceNumber: "007893",
+            date: "01 January 1999",
+            facilityNumber: "000001",
+            serviceType: "Demand Response & Interruptible Load",
+            purchaseOrder: "000001"
+          },
+          savingsDetails: {
+            amount: "$15500.00",
+            month: "December 1998",
+            batteryOffsetAmount: "$500.00",
+            totalRebateAmount: "$10000.00"
+          },
+          batteryCharges: {
+            chargedAmount: {
+                kwh: 30000,
+                rate: 0.1,
+                amount: "$3000,00"
+            },
+            dischargedAmount: {
+                kwh: 25000,
+                rate: 0.1,
+                amount: "$2500,00"                
+            },
+            batteryOffset: "$500.00"
+          },
+          rebates: {
+            allocatedRebate:"$10000.00",
+            totalRebate: "$10001.00"
+          },
+          chartData: {
+            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            datasets: [{
+              label: 'Total Savings',
+              data: [0, 0, 0, 0, 0, 10000, 25839, 25038, 25839, 25038, 25839, 25038],
+              backgroundColor: "#DEEAF6",
+              borderColor: "#2669AF",
+              borderWidth: 1,
+              datalabels: {
+                anchor: 'end',
+                align: 'top'
+          }
+            }]
+          },
+          contact: {
+            name: "Frank",
+            phone: "91237890",
+            email: "frank@crystalclear.com.sg"
+          }
+        };
+
+        // Compile the Handlebars template
+        var source = document.getElementById("invoice-template").innerHTML;
+        var template = Handlebars.compile(source);
+
+        // Insert the compiled template with data into the document
+        document.body.innerHTML = template(invoiceData);
+
+        // Get the canvas element and render the chart
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+          type: 'bar',
+          data: invoiceData.chartData,
+          plugins: [ChartDataLabels]
+        });
+      </script>
+    </div>
+  </script>
+</body>
+</html>
